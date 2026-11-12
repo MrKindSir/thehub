@@ -1,0 +1,58 @@
+:root {
+  --bg-0: #e8eef2;
+  --bg-1: #f7fafb;
+  --ink: #152028;
+  --ink-soft: #4b5b66;
+  --line: rgba(21, 32, 40, 0.12);
+  --panel: rgba(255, 255, 255, 0.9);
+  --accent: #0f7a6c;
+  --accent-soft: #d7efe9;
+  --danger: #d94a45;
+  --stage: #101820;
+  --font-display: "Syne", sans-serif;
+  --font-body: "Outfit", sans-serif;
+  --radius: 18px;
+  --shadow: 0 10px 30px rgba(21, 32, 40, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background:
+    radial-gradient(1200px 600px at 8% -12%, #cfe7e1 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #d7e4f0 0%, transparent 50%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-0));
+  min-height: 100vh;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.videos_portal_styles {
+  margin-left: 20%;
+  width: 60%;
+  height: calc(100vh - 12%);
+  left: 0;
+  top: 0;
+  position: absolute;
+  display: flex;
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+
+#dummy_video_canvas {
+  display: none;
+}
