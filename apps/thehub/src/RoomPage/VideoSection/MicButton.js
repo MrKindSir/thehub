@@ -6,9 +6,8 @@ import * as webRTCHandler from "../../utils/webRTCHandler";
 const MicButton = () => {
   const [isMicMuted, setIsMicMuted] = useState(false);
 
-  const handleMicButtonPressed = () => {
-    webRTCHandler.toggleMic(isMicMuted);
-
+  const handleMicButtonPressed = async () => {
+    await webRTCHandler.toggleMic(isMicMuted);
     setIsMicMuted(!isMicMuted);
   };
 

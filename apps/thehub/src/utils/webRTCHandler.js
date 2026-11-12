@@ -219,12 +219,145 @@ const getAudioOnlyLabel = (identity = "") => {
 
 ////////////////////////////////// Buttons logic //////////////////////////////////
 
-export const toggleMic = (isMuted) => {
-  localStream.getAudioTracks()[0].enabled = isMuted ? true : false;
+const getLiveTrack = (kind) => {
+  if (!localStream) {
+    return null;
+  }
+  const tracks =
+    kind === "audio" ? localStream.getAudioTracks() : localStream.getVideoTracks();
+  return tracks.find((track) => track.readyState === "live") || null;
 };
 
-export const toggleCamera = (isDisabled) => {
-  localStream.getVideoTracks()[0].enabled = isDisabled ? true : false;
+const getLocalPreviewVideoElement = () => {
+  const portal = document.getElementById("videos_portal");
+  if (!portal) {
+    return null;
+  }
+  for (const container of portal.querySelectorAll(".video_track_container")) {
+    if (!container.id) {
+      return container.querySelector("video");
+    }
+  }
+  return null;
+};
+
+const refreshLocalPreviewElement = () => {
+  const videoElement = getLocalPreviewVideoElement();
+  if (videoElement && localStream) {
+    videoElement.srcObject = localStream;
+  }
+};
+
+const replaceTrackForAllPeers = (oldTrack, newTrack) => {
+  if (!oldTrack || !newTrack || !localStream) {
+    return;
+  }
+  for (const socketId in peers) {
+    const peer = peers[socketId];
+    if (!peer) {
+      continue;
+    }
+    try {
+      peer.replaceTrack(oldTrack, newTrack, localStream);
+    } catch (err) {
+      console.log("error updating peer media track", err);
+    }
+  }
+};
+
+const stopLocalTrack = (kind) => {
+  if (!localStream) {
+    return;
+  }
+  const tracks =
+    kind === "audio" ? localStream.getAudioTracks() : localStream.getVideoTracks();
+  tracks.forEach((track) => {
+    try {
+      // End the MediaStreamTrack so the browser releases the device (LED/mic).
+      track.stop();
+    } catch (err) {
+      console.log("error stopping local track", err);
+    }
+  });
+  refreshLocalPreviewElement();
+};
+
+const restartLocalTrack = async (kind) => {
+  if (!localStream) {
+    return;
+  }
+
+  const constraints =
+    kind === "audio"
+      ? { audio: true, video: false }
+      : { audio: false, video: defaultConstraints.video };
+
+  const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+  const newTrack =
+    kind === "audio"
+      ? mediaStream.getAudioTracks()[0]
+      : mediaStream.getVideoTracks()[0];
+
+  const oldTracks =
+    kind === "audio" ? localStream.getAudioTracks() : localStream.getVideoTracks();
+  const oldTrack = oldTracks[0] || null;
+
+  if (oldTrack) {
+    replaceTrackForAllPeers(oldTrack, newTrack);
+    localStream.removeTrack(oldTrack);
+  } else {
+    // No prior track to replace; attach to existing peer connections when possible.
+    for (const socketId in peers) {
+      const peer = peers[socketId];
+      if (peer && typeof peer.addTrack === "function") {
+        try {
+          peer.addTrack(newTrack, localStream);
+        } catch (err) {
+          console.log("error adding restarted track to peer", err);
+        }
+      }
+    }
+  }
+
+  localStream.addTrack(newTrack);
+  refreshLocalPreviewElement();
+};
+
+// enabled=false keeps the device open; stop() releases mic/camera hardware.
+export const toggleMic = async (isMuted) => {
+  if (!localStream) {
+    return;
+  }
+
+  if (isMuted) {
+    try {
+      await restartLocalTrack("audio");
+    } catch (err) {
+      console.log("error occurred when trying to turn the microphone back on");
+      console.log(err);
+    }
+    return;
+  }
+
+  stopLocalTrack("audio");
+};
+
+export const toggleCamera = async (isDisabled) => {
+  if (!localStream) {
+    return;
+  }
+
+  if (isDisabled) {
+    try {
+      await restartLocalTrack("video");
+    } catch (err) {
+      console.log("error occurred when trying to turn the camera back on");
+      console.log(err);
+    }
+    return;
+  }
+
+  stopLocalTrack("video");
 };
 
 export const toggleScreenShare = (
