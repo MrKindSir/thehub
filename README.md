@@ -21,6 +21,8 @@ infrastructure/docker
 
 Do **not** bind API port 5002 while HubStream is running (HubStream uses 5002). This stack defaults to **5003** / **3011**.
 
+`infrastructure/` is local-only (not in git). From this machine:
+
 ```bash
 cd infrastructure/docker
 ./docker-compose-wrapper.sh up -d
