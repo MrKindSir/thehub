@@ -5,8 +5,13 @@ import { connect } from "react-redux";
 
 const NewMessage = ({ activeConversation, identity }) => {
   const [message, setMessage] = useState("");
+  const canSend = Boolean(activeConversation?.socketId);
 
   const sendMessage = () => {
+    if (!canSend || !message.trim()) {
+      return;
+    }
+
     wss.sendDirectMessage({
       receiverSocketId: activeConversation.socketId,
       identity: identity,
@@ -33,13 +38,17 @@ const NewMessage = ({ activeConversation, identity }) => {
         className="new_message_input"
         value={message}
         onChange={handleTextChange}
-        placeholder="Type your message.."
+        placeholder={
+          canSend ? "Type your message.." : "Select a participant first"
+        }
         type="text"
+        disabled={!canSend}
         onKeyDown={handleKeyPressed}
       />
       <img
         className="new_message_button"
         src={sendMessageButton}
+        alt="Send"
         onClick={sendMessage}
       />
     </div>
